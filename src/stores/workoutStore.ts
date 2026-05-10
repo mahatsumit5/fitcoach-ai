@@ -2,14 +2,18 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { ActiveWorkoutSession, ActiveExercise, SetLog } from "@/types";
-
+import * as ExpoCrypto from "expo-crypto";
 interface WorkoutState {
   activeSession: ActiveWorkoutSession | null;
   elapsedSeconds: number;
 
   startSession: (name: string, exercises: ActiveExercise[]) => void;
   logSet: (exerciseId: string, set: SetLog) => void;
-  updateSet: (exerciseId: string, setIndex: number, set: Partial<SetLog>) => void;
+  updateSet: (
+    exerciseId: string,
+    setIndex: number,
+    set: Partial<SetLog>,
+  ) => void;
   removeSet: (exerciseId: string, setIndex: number) => void;
   addExercise: (exercise: ActiveExercise) => void;
   removeExercise: (exerciseId: string) => void;
@@ -22,17 +26,17 @@ interface WorkoutState {
 export const useWorkoutStore = create<WorkoutState>()(
   persist(
     (set, get) => ({
-      activeSession:  null,
+      activeSession: null,
       elapsedSeconds: 0,
 
       startSession: (name, exercises) => {
         set({
           activeSession: {
-            id:          crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+            id: ExpoCrypto.randomUUID(),
             name,
-            startedAt:   new Date().toISOString(),
+            startedAt: new Date().toISOString(),
             exercises,
-            completed:   false,
+            completed: false,
           },
           elapsedSeconds: 0,
         });
@@ -47,7 +51,7 @@ export const useWorkoutStore = create<WorkoutState>()(
               exercises: state.activeSession.exercises.map((ex) =>
                 ex.id === exerciseId
                   ? { ...ex, sets_logged: [...ex.sets_logged, newSet] }
-                  : ex
+                  : ex,
               ),
             },
           };
@@ -65,10 +69,10 @@ export const useWorkoutStore = create<WorkoutState>()(
                   ? {
                       ...ex,
                       sets_logged: ex.sets_logged.map((s, i) =>
-                        i === setIndex ? { ...s, ...updated } : s
+                        i === setIndex ? { ...s, ...updated } : s,
                       ),
                     }
-                  : ex
+                  : ex,
               ),
             },
           };
@@ -85,9 +89,11 @@ export const useWorkoutStore = create<WorkoutState>()(
                 ex.id === exerciseId
                   ? {
                       ...ex,
-                      sets_logged: ex.sets_logged.filter((_, i) => i !== setIndex),
+                      sets_logged: ex.sets_logged.filter(
+                        (_, i) => i !== setIndex,
+                      ),
                     }
-                  : ex
+                  : ex,
               ),
             },
           };
@@ -113,7 +119,7 @@ export const useWorkoutStore = create<WorkoutState>()(
             activeSession: {
               ...state.activeSession,
               exercises: state.activeSession.exercises.filter(
-                (ex) => ex.id !== exerciseId
+                (ex) => ex.id !== exerciseId,
               ),
             },
           };
@@ -136,12 +142,12 @@ export const useWorkoutStore = create<WorkoutState>()(
       abandonSession: () => set({ activeSession: null, elapsedSeconds: 0 }),
     }),
     {
-      name:    "workout-store",
+      name: "workout-store",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
-        activeSession:  state.activeSession,
+        activeSession: state.activeSession,
         elapsedSeconds: state.elapsedSeconds,
       }),
-    }
-  )
+    },
+  ),
 );

@@ -9,7 +9,9 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
-    shouldSetBadge:  false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -36,14 +38,14 @@ export async function registerForPushNotifications(): Promise<string | null> {
   // Android channel
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
-      name:       "FitCoach",
+      name: "FitCoach",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#22c55e",
     });
 
     await Notifications.setNotificationChannelAsync("reminders", {
-      name:       "Workout reminders",
+      name: "Workout reminders",
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#22c55e",
@@ -55,7 +57,9 @@ export async function registerForPushNotifications(): Promise<string | null> {
     Constants.easConfig?.projectId;
 
   if (!projectId) {
-    console.warn("No EAS project ID found. Add it to app.json extra.eas.projectId");
+    console.warn(
+      "No EAS project ID found. Add it to app.json extra.eas.projectId",
+    );
     return null;
   }
 
@@ -63,10 +67,13 @@ export async function registerForPushNotifications(): Promise<string | null> {
   return token;
 }
 
-export async function savePushToken(userId: string, token: string): Promise<void> {
+export async function savePushToken(
+  userId: string,
+  token: string,
+): Promise<void> {
   const { error } = await supabase
     .from("profiles")
-    .update({ push_token: token })
+    .update({ push_token: token } as never)
     .eq("id", userId);
 
   if (error) console.error("Failed to save push token:", error);
@@ -77,7 +84,7 @@ export async function savePushToken(userId: string, token: string): Promise<void
 export async function scheduleWorkoutReminder(
   hour: number,
   minute: number,
-  weekdays: number[] // 1=Sun, 2=Mon ... 7=Sat
+  weekdays: number[], // 1=Sun, 2=Mon ... 7=Sat
 ): Promise<void> {
   // Cancel existing reminders first
   await cancelWorkoutReminders();
@@ -86,15 +93,16 @@ export async function scheduleWorkoutReminder(
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "Time to train 💪",
-        body:  "Your workout is waiting. Let's go!",
+        body: "Your workout is waiting. Let's go!",
         sound: true,
-        data:  { type: "workout_reminder" },
+        data: { type: "workout_reminder" },
       },
       trigger: {
         weekday,
         hour,
         minute,
         repeats: true,
+        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
       } as Notifications.WeeklyTriggerInput,
     });
   }
@@ -104,13 +112,14 @@ export async function scheduleWaterReminder(): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
       title: "Stay hydrated 💧",
-      body:  "Don't forget to drink water!",
+      body: "Don't forget to drink water!",
       sound: false,
-      data:  { type: "water_reminder" },
+      data: { type: "water_reminder" },
     },
     trigger: {
       seconds: 60 * 60 * 2, // every 2 hours
       repeats: true,
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
     },
   });
 }
@@ -118,7 +127,7 @@ export async function scheduleWaterReminder(): Promise<void> {
 export async function cancelWorkoutReminders(): Promise<void> {
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
   const reminders = scheduled.filter(
-    (n) => n.content.data?.type === "workout_reminder"
+    (n) => n.content.data?.type === "workout_reminder",
   );
   for (const n of reminders) {
     await Notifications.cancelScheduledNotificationAsync(n.identifier);
@@ -127,7 +136,7 @@ export async function cancelWorkoutReminders(): Promise<void> {
 
 export async function sendLocalNotification(
   title: string,
-  body: string
+  body: string,
 ): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: { title, body, sound: true },
