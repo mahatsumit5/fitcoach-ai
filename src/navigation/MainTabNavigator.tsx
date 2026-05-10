@@ -1,57 +1,56 @@
 import React from "react";
-import { Text } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import {
+  LayoutDashboard, Dumbbell, Bot, Apple, TrendingUp, UserCircle,
+} from "lucide-react-native";
 import type { MainTabParamList } from "./types";
-import { DashboardScreen } from "@/screens/dashboard/DashboardScreen";
-import { WorkoutsStack }   from "./WorkoutsStack";
-import { CoachScreen }     from "@/screens/coach/CoachScreen";
-import { NutritionScreen } from "@/screens/nutrition/NutritionScreen";
-import { ProgressScreen }  from "@/screens/progress/ProgressScreen";
-import { ProfileScreen }   from "@/screens/profile/ProfileScreen";
+import { useTheme }          from "@/hooks/useTheme";
+import { DashboardScreen }   from "@/screens/dashboard/DashboardScreen";
+import { WorkoutsStack }     from "./WorkoutsStack";
+import { CoachScreen }       from "@/screens/coach/CoachScreen";
+import { NutritionScreen }   from "@/screens/nutrition/NutritionScreen";
+import { ProgressScreen }    from "@/screens/progress/ProgressScreen";
+import { ProfileScreen }     from "@/screens/profile/ProfileScreen";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const TAB_ICONS: Record<string, string> = {
-  Dashboard: "⊡",
-  Workouts:  "◈",
-  Coach:     "◎",
-  Nutrition: "⊕",
-  Progress:  "◉",
-  Profile:   "◐",
+const TAB_ICONS: Record<string, any> = {
+  Dashboard: LayoutDashboard,
+  Workouts:  Dumbbell,
+  Coach:     Bot,
+  Nutrition: Apple,
+  Progress:  TrendingUp,
+  Profile:   UserCircle,
 };
 
 export function MainTabNavigator() {
+  const { theme } = useTheme();
+
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarIcon: ({ focused }) => (
-          <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.4 }}>
-            {TAB_ICONS[route.name]}
-          </Text>
-        ),
-        tabBarLabel: ({ focused, color }) => (
-          <Text
-            style={{
-              fontSize:   10,
-              color,
-              fontWeight: focused ? "600" : "400",
-              marginBottom: 4,
-            }}
-          >
-            {route.name}
-          </Text>
-        ),
-        tabBarStyle: {
-          backgroundColor:  "#141414",
-          borderTopColor:   "#2a2a2a",
-          borderTopWidth:   0.5,
-          height:           80,
-          paddingTop:       8,
-        },
-        tabBarActiveTintColor:   "#22c55e",
-        tabBarInactiveTintColor: "#6b7280",
-      })}
+      screenOptions={({ route }) => {
+        const Icon = TAB_ICONS[route.name];
+        return {
+          headerShown: false,
+          tabBarIcon: ({ focused, color }) => (
+            <Icon size={26} color={color} strokeWidth={focused ? 2.2 : 1.8} />
+          ),
+          tabBarLabelStyle: {
+            fontSize:     12,
+            fontWeight:   "500",
+            marginBottom: 4,
+          },
+          tabBarStyle: {
+            backgroundColor: theme.tabBar,
+            borderTopColor:  theme.tabBorder,
+            borderTopWidth:  0.5,
+            height:          82,
+            paddingTop:      8,
+          },
+          tabBarActiveTintColor:   theme.tabActive,
+          tabBarInactiveTintColor: theme.tabInactive,
+        };
+      }}
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Workouts"  component={WorkoutsStack} />

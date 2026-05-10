@@ -1,21 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableOpacity,
+  View, Text, ScrollView, KeyboardAvoidingView,
+  Platform, TouchableOpacity,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { zodResolver }         from "@hookform/resolvers/zod";
+import { z }                   from "zod";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { AuthStackParamList } from "@/navigation/types";
-import { useAuthStore } from "@/stores/authStore";
-import { useUIStore }   from "@/stores/uiStore";
-import { Button } from "@/components/ui/Button";
-import { Input }  from "@/components/ui/Input";
+import type { AuthStackParamList }  from "@/navigation/types";
+import { useAuthStore }             from "@/stores/authStore";
+import { useUIStore }               from "@/stores/uiStore";
+import { Button }                   from "@/components/ui/Button";
+import { Input }                    from "@/components/ui/Input";
+import { SocialAuthButtons }        from "@/components/ui/SocialAuthButtons";
 
 const schema = z
   .object({
@@ -25,7 +22,7 @@ const schema = z
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Passwords do not match",
-    path: ["confirmPassword"],
+    path:    ["confirmPassword"],
   });
 
 type FormData = z.infer<typeof schema>;
@@ -35,14 +32,14 @@ type Props = {
 };
 
 export function RegisterScreen({ navigation }: Props) {
-  const { signUp, isLoading } = useAuthStore();
+  const { signUp, signInWithGoogle, signInWithApple, isLoading } = useAuthStore();
   const { showToast } = useUIStore();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading,  setAppleLoading]  = useState(false);
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
+  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -50,6 +47,30 @@ export function RegisterScreen({ navigation }: Props) {
       showToast("Account created! Check your email to verify.", "success");
     } catch (err: any) {
       showToast(err.message ?? "Sign up failed. Try again.", "error");
+    }
+  };
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      showToast(err.message ?? "Google sign in failed.", "error");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleApple = async () => {
+    setAppleLoading(true);
+    try {
+      await signInWithApple();
+    } catch (err: any) {
+      if (err.code !== "ERR_REQUEST_CANCELED") {
+        showToast(err.message ?? "Apple sign in failed.", "error");
+      }
+    } finally {
+      setAppleLoading(false);
     }
   };
 
@@ -64,26 +85,34 @@ export function RegisterScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-1 px-6 pt-16 pb-10">
-          {/* Back */}
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="mb-8"
-          >
+          <TouchableOpacity onPress={() => navigation.goBack()} className="mb-8">
             <Text className="text-gray-400 text-base">← Back</Text>
           </TouchableOpacity>
 
-          {/* Header */}
-          <View className="gap-2 mb-10">
-            <Text className="text-4xl font-bold text-white tracking-tight">
-              Create account
-            </Text>
-            <Text className="text-base text-gray-400">
-              Start your AI-powered fitness journey today
-            </Text>
-          </View>
+          <Text className="text-4xl font-bold text-white tracking-tight mb-1">
+            Create account
+          </Text>
+          <Text className="text-base text-gray-400 mb-8">
+            Start your AI-powered fitness journey
+          </Text>
 
-          {/* Form */}
           <View className="gap-4">
+            {/* Social auth */}
+            <SocialAuthButtons
+              onGoogle={handleGoogle}
+              onApple={handleApple}
+              loadingGoogle={googleLoading}
+              loadingApple={appleLoading}
+              disabled={isLoading}
+            />
+
+            {/* Divider */}
+            <View className="flex-row items-center gap-3 my-1">
+              <View className="flex-1 h-px bg-surface-border" />
+              <Text className="text-gray-600 text-xs">or sign up with email</Text>
+              <View className="flex-1 h-px bg-surface-border" />
+            </View>
+
             <Controller
               control={control}
               name="email"
@@ -135,24 +164,21 @@ export function RegisterScreen({ navigation }: Props) {
               )}
             />
 
-            <Text className="text-xs text-gray-500 mt-1 leading-5">
+            <Text className="text-xs text-gray-500 leading-5">
               By creating an account you agree to our{" "}
               <Text className="text-brand-400">Terms of Service</Text> and{" "}
               <Text className="text-brand-400">Privacy Policy</Text>.
             </Text>
 
-            <View className="mt-2">
-              <Button
-                label="Create account"
-                onPress={handleSubmit(onSubmit)}
-                loading={isLoading}
-                fullWidth
-                size="lg"
-              />
-            </View>
+            <Button
+              label="Create account"
+              onPress={handleSubmit(onSubmit)}
+              loading={isLoading}
+              fullWidth
+              size="lg"
+            />
           </View>
 
-          {/* Footer */}
           <View className="flex-row justify-center items-center gap-2 mt-8">
             <Text className="text-gray-500 text-sm">Already have an account?</Text>
             <TouchableOpacity onPress={() => navigation.navigate("Login")}>

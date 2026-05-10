@@ -17,6 +17,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.yourname.fitcoachai",
       "buildNumber": "1",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSHealthShareUsageDescription": "FitCoach reads your fitness data to personalise your coaching.",
         "NSHealthUpdateUsageDescription": "FitCoach saves your workouts to Apple Health.",
@@ -46,7 +47,10 @@
           "sounds": []
         }
       ],
-      "expo-secure-store"
+      "expo-apple-authentication",
+
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

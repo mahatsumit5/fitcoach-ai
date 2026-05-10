@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { signInWithGoogle, signInWithApple } from "@/lib/oauth";
+import { getProfile } from "@/api/profile";
 import type { Profile } from "@/types";
 
 interface AuthState {
@@ -10,14 +12,15 @@ interface AuthState {
   isLoading: boolean;
   isInitialized: boolean;
 
-  // Actions
   initialize: () => () => void;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   setProfile: (profile: Profile) => void;
-  fetchProfile: (userId: string) => Promise<void>;
+  fetchProfile: (userId: string, email?: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -28,7 +31,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
 
   initialize: () => {
-    // Restore existing session on app launch
     supabase.auth.getSession().then(({ data: { session } }) => {
       set({
         session,
@@ -37,11 +39,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isInitialized: true,
       });
       if (session?.user) {
-        get().fetchProfile(session.user.id);
+        get().fetchProfile(session.user.id, session.user.email);
       }
     });
 
-    // Listen for auth state changes (sign in, sign out, token refresh)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -51,7 +52,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
       });
       if (session?.user) {
-        get().fetchProfile(session.user.id);
+        get().fetchProfile(session.user.id, session.user.email);
       } else {
         set({ profile: null });
       }
@@ -60,19 +61,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return () => subscription.unsubscribe();
   },
 
-  fetchProfile: async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-
-    if (!error && data) {
-      set({ profile: data });
+  fetchProfile: async (userId, email) => {
+    try {
+      const profile = await getProfile(userId);
+      if (profile) set({ profile });
+    } catch (err) {
+      console.error("fetchProfile error:", err);
     }
   },
 
-  signIn: async (email: string, password: string) => {
+  signIn: async (email, password) => {
     set({ isLoading: true });
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -85,14 +83,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  signUp: async (email: string, password: string) => {
+  signUp: async (email, password) => {
     set({ isLoading: true });
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
       });
-      console.log(data);
       if (error) throw error;
     } finally {
       set({ isLoading: false });
@@ -105,7 +102,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user: null, session: null, profile: null, isLoading: false });
   },
 
-  resetPassword: async (email: string) => {
+  resetPassword: async (email) => {
     const { error } = await supabase.auth.resetPasswordForEmail(
       email.trim().toLowerCase(),
       { redirectTo: "fitcoachai://reset-password" },
@@ -113,5 +110,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw error;
   },
 
-  setProfile: (profile: Profile) => set({ profile }),
+  signInWithGoogle: async () => {
+    set({ isLoading: true });
+    try {
+      await signInWithGoogle();
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  signInWithApple: async () => {
+    set({ isLoading: true });
+    try {
+      await signInWithApple();
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  setProfile: (profile) => set({ profile }),
 }));

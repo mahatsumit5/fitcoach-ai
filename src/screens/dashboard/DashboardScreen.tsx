@@ -1,28 +1,48 @@
 import React from "react";
-import {
-  View, Text, ScrollView, TouchableOpacity,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  Flame, Dumbbell, Timer, Droplets, ChevronRight,
+} from "lucide-react-native";
 import { useAuthStore }    from "@/stores/authStore";
 import { useWeeklyStats }  from "@/hooks/useWorkout";
 import { useWorkoutStore } from "@/stores/workoutStore";
+import { useTheme }        from "@/hooks/useTheme";
 import { WorkoutTimer }    from "@/components/workout/WorkoutTimer";
 import { Skeleton }        from "@/components/ui/SkeletonLoader";
 import { formatDurationLong } from "@/utils/formatting";
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({ label, value, Icon, iconColor }: {
+  label: string; value: string; Icon: any; iconColor: string;
+}) {
+  const { theme } = useTheme();
   return (
-    <View className="flex-1 bg-surface-secondary border border-surface-border rounded-2xl p-4">
-      <Text className="text-brand-500 text-2xl font-bold">{value}</Text>
-      <Text className="text-gray-500 text-xs mt-1">{label}</Text>
+    <View style={{
+      flex: 1, backgroundColor: theme.bgCard,
+      borderRadius: 20, padding: 16,
+      borderWidth: 0.5, borderColor: theme.border,
+    }}>
+      <Icon size={22} color={iconColor} strokeWidth={2} />
+      <Text style={{ color: theme.textPrimary, fontSize: 22, fontWeight: "700", marginTop: 8 }}>
+        {value}
+      </Text>
+      <Text style={{ color: theme.textMuted, fontSize: 13, marginTop: 2 }}>{label}</Text>
     </View>
   );
 }
 
+const QUICK_WORKOUTS = [
+  { name: "Push Day",  Icon: Dumbbell, desc: "Chest · Shoulders · Triceps · 45 min",  color: "#3b82f6" },
+  { name: "Pull Day",  Icon: Dumbbell, desc: "Back · Biceps · 45 min",                color: "#8b5cf6" },
+  { name: "Leg Day",   Icon: Dumbbell, desc: "Quads · Hamstrings · Glutes · 50 min",  color: "#f59e0b" },
+  { name: "Full Body", Icon: Flame,    desc: "All muscle groups · 60 min",            color: "#ef4444" },
+];
+
 export function DashboardScreen() {
-  const { profile }       = useAuthStore();
+  const { profile }      = useAuthStore();
   const { data: stats, isLoading } = useWeeklyStats();
   const { activeSession, elapsedSeconds } = useWorkoutStore();
+  const { theme }        = useTheme();
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -32,22 +52,24 @@ export function DashboardScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-surface-primary" edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.bgPrimary }} edges={["top"]}>
       <ScrollView
-        className="flex-1"
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between mb-6">
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <View>
-            <Text className="text-gray-400 text-sm">{greeting()}</Text>
-            <Text className="text-white text-2xl font-bold mt-0.5">
+            <Text style={{ color: theme.textMuted, fontSize: 15 }}>{greeting()}</Text>
+            <Text style={{ color: theme.textPrimary, fontSize: 26, fontWeight: "700", marginTop: 2 }}>
               {profile?.display_name ?? "Athlete"} 👋
             </Text>
           </View>
-          <View className="w-10 h-10 rounded-full bg-brand-500 items-center justify-center">
-            <Text className="text-white font-bold text-base">
+          <View style={{
+            width: 46, height: 46, borderRadius: 23,
+            backgroundColor: theme.brand, alignItems: "center", justifyContent: "center",
+          }}>
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 18 }}>
               {profile?.display_name?.[0]?.toUpperCase() ?? "A"}
             </Text>
           </View>
@@ -55,49 +77,64 @@ export function DashboardScreen() {
 
         {/* Active session banner */}
         {activeSession && (
-          <View className="bg-brand-900/40 border border-brand-500 rounded-3xl p-4 mb-6 flex-row items-center justify-between">
+          <View style={{
+            backgroundColor: theme.brandBg, borderWidth: 1, borderColor: theme.brand,
+            borderRadius: 24, padding: 16, marginBottom: 20,
+            flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+          }}>
             <View>
-              <Text className="text-brand-400 text-xs font-semibold uppercase tracking-wider">
+              <Text style={{ color: theme.brandLight, fontSize: 13, fontWeight: "600", textTransform: "uppercase", letterSpacing: 1 }}>
                 Active workout
               </Text>
-              <Text className="text-white font-semibold mt-1">{activeSession.name}</Text>
+              <Text style={{ color: theme.textPrimary, fontWeight: "600", fontSize: 17, marginTop: 4 }}>
+                {activeSession.name}
+              </Text>
             </View>
             <WorkoutTimer seconds={elapsedSeconds} size="sm" />
           </View>
         )}
 
         {/* Weekly stats */}
-        <Text className="text-white font-semibold text-base mb-3">This week</Text>
+        <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: "600", marginBottom: 12 }}>
+          This week
+        </Text>
         {isLoading ? (
-          <View className="flex-row gap-3 mb-6">
-            <View className="flex-1"><Skeleton height={80} borderRadius={16} /></View>
-            <View className="flex-1"><Skeleton height={80} borderRadius={16} /></View>
-            <View className="flex-1"><Skeleton height={80} borderRadius={16} /></View>
+          <View style={{ flexDirection: "row", gap: 12, marginBottom: 24 }}>
+            {[1,2,3].map(i => <View key={i} style={{ flex: 1 }}><Skeleton height={90} borderRadius={20} /></View>)}
           </View>
         ) : (
-          <View className="flex-row gap-3 mb-6">
-            <StatCard label="Workouts"  value={String(stats?.count ?? 0)} />
-            <StatCard label="Minutes"   value={String(stats?.totalMinutes ?? 0)} />
-            <StatCard label="Calories"  value={String(stats?.totalCalories ?? 0)} />
+          <View style={{ flexDirection: "row", gap: 12, marginBottom: 24 }}>
+            <StatCard label="Workouts" value={String(stats?.count ?? 0)}         Icon={Dumbbell} iconColor="#22c55e" />
+            <StatCard label="Minutes"  value={String(stats?.totalMinutes ?? 0)}  Icon={Timer}    iconColor="#3b82f6" />
+            <StatCard label="Calories" value={String(stats?.totalCalories ?? 0)} Icon={Flame}    iconColor="#f59e0b" />
           </View>
         )}
 
         {/* Quick start */}
-        <Text className="text-white font-semibold text-base mb-3">Quick start</Text>
-        <View className="gap-3">
+        <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: "600", marginBottom: 12 }}>
+          Quick start
+        </Text>
+        <View style={{ gap: 12 }}>
           {QUICK_WORKOUTS.map((w) => (
             <TouchableOpacity
               key={w.name}
-              className="bg-surface-card border border-surface-border rounded-3xl p-4 flex-row items-center gap-4"
+              style={{
+                backgroundColor: theme.bgCard, borderRadius: 24,
+                borderWidth: 0.5, borderColor: theme.border,
+                padding: 16, flexDirection: "row", alignItems: "center", gap: 16,
+              }}
             >
-              <View className="w-12 h-12 rounded-2xl bg-surface-tertiary items-center justify-center">
-                <Text style={{ fontSize: 24 }}>{w.icon}</Text>
+              <View style={{
+                width: 48, height: 48, borderRadius: 16,
+                backgroundColor: theme.bgTertiary, alignItems: "center", justifyContent: "center",
+              }}>
+                <w.Icon size={24} color={w.color} strokeWidth={2} />
               </View>
-              <View className="flex-1">
-                <Text className="text-white font-semibold">{w.name}</Text>
-                <Text className="text-gray-500 text-xs mt-0.5">{w.desc}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: theme.textPrimary, fontWeight: "600", fontSize: 17 }}>{w.name}</Text>
+                <Text style={{ color: theme.textMuted, fontSize: 14, marginTop: 2 }}>{w.desc}</Text>
               </View>
-              <Text className="text-gray-600 text-lg">›</Text>
+              <ChevronRight size={20} color={theme.textMuted} />
             </TouchableOpacity>
           ))}
         </View>
@@ -105,10 +142,3 @@ export function DashboardScreen() {
     </SafeAreaView>
   );
 }
-
-const QUICK_WORKOUTS = [
-  { name: "Push Day",  icon: "💪", desc: "Chest · Shoulders · Triceps · 45 min" },
-  { name: "Pull Day",  icon: "🏋️", desc: "Back · Biceps · 45 min" },
-  { name: "Leg Day",   icon: "🦵", desc: "Quads · Hamstrings · Glutes · 50 min" },
-  { name: "Full Body", icon: "⚡", desc: "All muscle groups · 60 min" },
-];
