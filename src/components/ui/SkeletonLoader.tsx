@@ -29,7 +29,7 @@ export function Skeleton({
           duration: 800,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     animation.start();
     return () => animation.stop();
@@ -71,8 +71,12 @@ export function DashboardSkeleton() {
     <View className="gap-4 p-4">
       <Skeleton height={28} width="50%" />
       <View className="flex-row gap-3">
-        <View className="flex-1"><Skeleton height={90} borderRadius={16} /></View>
-        <View className="flex-1"><Skeleton height={90} borderRadius={16} /></View>
+        <View className="flex-1">
+          <Skeleton height={90} borderRadius={16} />
+        </View>
+        <View className="flex-1">
+          <Skeleton height={90} borderRadius={16} />
+        </View>
       </View>
       <Skeleton height={160} borderRadius={20} />
       <Skeleton height={20} width="40%" />

@@ -8,7 +8,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { queryClient } from "@/lib/queryClient";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { Toast } from "@/components/ui/Toast";
-import { Text, View } from "react-native";
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
