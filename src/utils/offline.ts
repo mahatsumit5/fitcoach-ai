@@ -1,35 +1,70 @@
-// src/utils/offline.ts
 import NetInfo from "@react-native-community/netinfo";
-import { queryClient } from "../lib/queryClient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// React Query handles most of this automatically via staleTime + cacheTime.
-// For mutations that need to survive offline, use a simple queue:
+const QUEUE_KEY = "fitcoach_offline_queue";
 
-export const offlineQueue: QueuedMutation[] = [];
+export type QueuedMutation = {
+  id:        string;
+  type:      string;
+  payload:   unknown;
+  createdAt: string;
+};
 
-export async function syncOfflineQueue() {
+export async function enqueueOfflineMutation(
+  type: string,
+  payload: unknown
+): Promise<void> {
+  const existing = await getQueue();
+  const updated: QueuedMutation[] = [
+    ...existing,
+    {
+      id:        `q_${Date.now()}`,
+      type,
+      payload,
+      createdAt: new Date().toISOString(),
+    },
+  ];
+  await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(updated));
+}
+
+export async function getQueue(): Promise<QueuedMutation[]> {
+  const raw = await AsyncStorage.getItem(QUEUE_KEY);
+  return raw ? (JSON.parse(raw) as QueuedMutation[]) : [];
+}
+
+export async function removeFromQueue(id: string): Promise<void> {
+  const existing = await getQueue();
+  const updated  = existing.filter((m) => m.id !== id);
+  await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(updated));
+}
+
+export async function clearQueue(): Promise<void> {
+  await AsyncStorage.removeItem(QUEUE_KEY);
+}
+
+/**
+ * Call this when the app comes back online.
+ * Pass a handler map: { [type]: async (payload) => void }
+ */
+export async function syncOfflineQueue(
+  handlers: Record<string, (payload: unknown) => Promise<void>>
+): Promise<void> {
   const { isConnected } = await NetInfo.fetch();
-  if (!isConnected || offlineQueue.length === 0) return;
+  if (!isConnected) return;
 
-  for (const mutation of [...offlineQueue]) {
+  const queue = await getQueue();
+  if (queue.length === 0) return;
+
+  for (const mutation of queue) {
+    const handler = handlers[mutation.type];
+    if (!handler) continue;
+
     try {
-      await mutation.execute();
-      offlineQueue.splice(offlineQueue.indexOf(mutation), 1);
-    } catch {
-      // Leave in queue for next sync attempt
+      await handler(mutation.payload);
+      await removeFromQueue(mutation.id);
+    } catch (err) {
+      console.warn(`Offline sync failed for ${mutation.type}:`, err);
+      // Leave in queue — will retry next time
     }
   }
 }
-
-// React Query config for offline-first:
-// queryClient.ts
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 min
-      gcTime: 1000 * 60 * 60 * 24, // 24 hr cache
-      retry: (failureCount, error) =>
-        failureCount < 3 && !isNetworkError(error),
-    },
-  },
-});

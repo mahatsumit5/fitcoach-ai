@@ -88,10 +88,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signUp: async (email: string, password: string) => {
     set({ isLoading: true });
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
       });
+      console.log(data);
       if (error) throw error;
     } finally {
       set({ isLoading: false });
@@ -107,7 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   resetPassword: async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(
       email.trim().toLowerCase(),
-      { redirectTo: "fitcoachai://reset-password" }
+      { redirectTo: "fitcoachai://reset-password" },
     );
     if (error) throw error;
   },

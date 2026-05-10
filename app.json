@@ -1,40 +1,63 @@
 {
   "expo": {
     "name": "FitCoach AI",
-    "web": {
-      "bundler": "metro"
-    },
     "slug": "fitcoach-ai",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "fitcoachai",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#0a0a0a"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.yourname.fitcoachai"
+      "bundleIdentifier": "com.yourname.fitcoachai",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "FitCoach reads your fitness data to personalise your coaching.",
+        "NSHealthUpdateUsageDescription": "FitCoach saves your workouts to Apple Health.",
+        "UIBackgroundModes": ["fetch", "remote-notification"]
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0a0a0a"
       },
       "package": "com.yourname.fitcoachai",
-      "permissions": ["RECEIVE_BOOT_COMPLETED", "VIBRATE"]
+      "versionCode": 1,
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ],
+      "googleServicesFile": "./google-services.json"
     },
     "plugins": [
       [
         "expo-notifications",
         {
-          "color": "#22c55e"
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#22c55e",
+          "sounds": []
         }
       ],
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/YOUR_EAS_PROJECT_ID"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

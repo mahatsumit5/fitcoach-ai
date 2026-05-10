@@ -13,21 +13,24 @@ export async function getProfile(userId: string): Promise<Profile> {
 
 export async function updateProfile(
   userId: string,
-  updates: Partial<Profile>
+  updates: Partial<Profile>,
 ): Promise<Profile> {
   const { data, error } = await supabase
     .from("profiles")
-    .update(updates)
+    .update(updates as never)
     .eq("id", userId)
     .select()
     .single();
+  console.log(data);
+  console.log(error);
   if (error) throw error;
+
   return data;
 }
 
 export async function completeOnboarding(
   userId: string,
-  profileData: Partial<Profile>
+  profileData: Partial<Profile>,
 ): Promise<Profile> {
   return updateProfile(userId, {
     ...profileData,
