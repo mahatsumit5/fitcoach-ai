@@ -1,12 +1,11 @@
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
-import type { CompositeNavigationProp } from "@react-navigation/native";
+import type { BottomTabNavigationProp }   from "@react-navigation/bottom-tabs";
+import type { CompositeNavigationProp }   from "@react-navigation/native";
 
-// ─── Stack param lists ────────────────────────────────────────────────────────
 export type RootStackParamList = {
-  Auth:        undefined;
-  Onboarding:  undefined;
-  Main:        undefined;
+  Auth:       undefined;
+  Onboarding: undefined;
+  Main:       undefined;
 };
 
 export type AuthStackParamList = {
@@ -16,28 +15,27 @@ export type AuthStackParamList = {
 };
 
 export type OnboardingStackParamList = {
-  ProfileSetup:  undefined;
-  Goals:         undefined;
-  Preferences:   undefined;
+  ProfileSetup: undefined;
+  Goals:        undefined;
+  Preferences:  undefined;
 };
 
 export type MainTabParamList = {
-  Dashboard:  undefined;
-  Workouts:   undefined;
-  Coach:      undefined;
-  Nutrition:  undefined;
-  Progress:   undefined;
+  Dashboard: undefined;
+  Workouts:  undefined;
+  Coach:     undefined;
+  Nutrition: undefined;
+  Progress:  undefined;
+  Profile:   undefined;
 };
 
 export type WorkoutsStackParamList = {
-  WorkoutList:    undefined;
-  ActiveWorkout:  { planId?: string; sessionId?: string };
-  WorkoutHistory: undefined;
-  WorkoutDetail:  { sessionId: string };
+  WorkoutList:   undefined;
+  ActiveWorkout: undefined;
 };
 
-// ─── Navigation prop helpers ──────────────────────────────────────────────────
-export type AuthNavigationProp = NativeStackNavigationProp<AuthStackParamList>;
+export type AuthNavigationProp =
+  NativeStackNavigationProp<AuthStackParamList>;
 
 export type OnboardingNavigationProp =
   NativeStackNavigationProp<OnboardingStackParamList>;

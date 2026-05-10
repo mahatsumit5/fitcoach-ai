@@ -7,6 +7,7 @@ import { WorkoutsStack }   from "./WorkoutsStack";
 import { CoachScreen }     from "@/screens/coach/CoachScreen";
 import { NutritionScreen } from "@/screens/nutrition/NutritionScreen";
 import { ProgressScreen }  from "@/screens/progress/ProgressScreen";
+import { ProfileScreen }   from "@/screens/profile/ProfileScreen";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -16,6 +17,7 @@ const TAB_ICONS: Record<string, string> = {
   Coach:     "◎",
   Nutrition: "⊕",
   Progress:  "◉",
+  Profile:   "◐",
 };
 
 export function MainTabNavigator() {
@@ -29,7 +31,14 @@ export function MainTabNavigator() {
           </Text>
         ),
         tabBarLabel: ({ focused, color }) => (
-          <Text style={{ fontSize: 10, color, fontWeight: focused ? "600" : "400", marginBottom: 4 }}>
+          <Text
+            style={{
+              fontSize:   10,
+              color,
+              fontWeight: focused ? "600" : "400",
+              marginBottom: 4,
+            }}
+          >
             {route.name}
           </Text>
         ),
@@ -49,6 +58,7 @@ export function MainTabNavigator() {
       <Tab.Screen name="Coach"     component={CoachScreen} />
       <Tab.Screen name="Nutrition" component={NutritionScreen} />
       <Tab.Screen name="Progress"  component={ProgressScreen} />
+      <Tab.Screen name="Profile"   component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
